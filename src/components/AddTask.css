@@ -1,0 +1,25 @@
+.add-task-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.add-task-form input {
+  flex: 1;
+  padding: 11px 14px;
+  min-width: 0;
+  color: var(--text);
+  background: #fff;
+}
+
+.add-task-form button {
+  background: var(--primary);
+  color: #fff;
+  padding: 11px 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.add-task-form button:hover {
+  background: var(--primary-hover);
+}
