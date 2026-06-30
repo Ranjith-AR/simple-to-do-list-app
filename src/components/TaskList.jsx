@@ -37,35 +37,65 @@ export default function TaskList({ session }) {
   }
 
   async function addTask(text) {
-    const { error } = await supabase
+    const tempId = `temp-${Date.now()}`
+    const optimistic = { id: tempId, text, done: false, user_id: session.user.id, created_at: new Date().toISOString() }
+    setTasks(prev => [...prev, optimistic])
+
+    const { data, error } = await supabase
       .from('tasks')
       .insert({ text, user_id: session.user.id })
-    if (error) setError(error.message)
+      .select()
+      .single()
+
+    if (error) {
+      setError(error.message)
+      setTasks(prev => prev.filter(t => t.id !== tempId))
+    } else {
+      setTasks(prev => prev.map(t => t.id === tempId ? data : t))
+    }
   }
 
   async function toggleTask(id, done) {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !done } : t))
+
     const { error } = await supabase
       .from('tasks')
       .update({ done: !done })
       .eq('id', id)
-    if (error) setError(error.message)
+
+    if (error) {
+      setError(error.message)
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, done } : t))
+    }
   }
 
   async function deleteTask(id) {
+    setTasks(prev => prev.filter(t => t.id !== id))
+
     const { error } = await supabase
       .from('tasks')
       .delete()
       .eq('id', id)
-    if (error) setError(error.message)
+
+    if (error) {
+      setError(error.message)
+      fetchTasks()
+    }
   }
 
   async function clearCompleted() {
+    setTasks(prev => prev.filter(t => !t.done))
+
     const { error } = await supabase
       .from('tasks')
       .delete()
       .eq('done', true)
       .eq('user_id', session.user.id)
-    if (error) setError(error.message)
+
+    if (error) {
+      setError(error.message)
+      fetchTasks()
+    }
   }
 
   const remaining = tasks.filter(t => !t.done).length
